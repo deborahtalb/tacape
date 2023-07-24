@@ -17,6 +17,7 @@ def main():
     argument_parser.add_argument('--format', choices=['text', 'fasta'], default='text', help='[optional] Input file format (default: text)')
     argument_parser.add_argument('--output', required=True, help='Path prefix of the output files containing the trained model')
     argument_parser.add_argument('--epochs', type=int, default=30, help="[optional] Number of epochs to be used during training (default: 30)")
+    argument_parser.add_argument('--max-vocab-size', required=False, help='[optional] Size of the vocabulary', default=24, type=int)
 
     arguments = argument_parser.parse_args()
 
@@ -25,10 +26,11 @@ def main():
         arguments.positive_test, 
         format=arguments.format, 
         output=arguments.output,
-        epochs=arguments.epochs
+        epochs=arguments.epochs,
+        max_vocab_size=arguments.max_vocab_size
     )
 
-def train_model(positive_train, positive_test, output, format='text', epochs=30):
+def train_model(positive_train, positive_test, output, max_vocab_size, format='text', epochs=30):
 
     raw_X_train = [*load_data(positive_train, format)]
     raw_X_test  = [*load_data(positive_test, format)]
@@ -81,7 +83,7 @@ def train_model(positive_train, positive_test, output, format='text', epochs=30)
         start_from_epoch=0,
     )]
 
-    model = build_model(output_shape=(len(le.classes_)))
+    model = build_model(output_shape=(len(le.classes_)), embed_dim=max_vocab_size)
     model.fit(X_train_tokens, y_train_encode, validation_data=(X_test_tokens, y_test_encode), epochs=epochs, callbacks=callbacks)
     model.save_weights(output + '.weights')
 

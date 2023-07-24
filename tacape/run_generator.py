@@ -21,12 +21,13 @@ def main():
     argument_parser.add_argument('--temperature', default=1.0, help='[optional] Temperature used for logit scaling when sampling aminoacids during auto-regressive generation (default: 1.0)')
     argument_parser.add_argument('--threshold', default=0.5, help='[optional] Classification probability threshold (default: 0.5)')
     argument_parser.add_argument('--output', required=True, help='Path to the output CSV file')
+    argument_parser.add_argument('--max-vocab-size', required=False, help='[optional] Size of the vocabulary', default=24)
 
     arguments = argument_parser.parse_args()
 
-    run_generator(arguments.generator_prefix, arguments.classifier_prefix, arguments.output, arguments.number_of_sequences, arguments.temperature)
+    run_generator(arguments.generator_prefix, arguments.classifier_prefix, arguments.output, arguments.number_of_sequences, arguments.temperature, arguments.max_vocab_size)
 
-def run_generator(generator_prefix, classifier_prefix, output, number_of_sequences, temperature):
+def run_generator(generator_prefix, classifier_prefix, output, number_of_sequences, temperature, max_vocab_size):
 
     with open(generator_prefix + '.tokenizer', 'rb') as reader:
         generator_tokenizer = pickle.loads(reader.read())
@@ -45,7 +46,7 @@ def run_generator(generator_prefix, classifier_prefix, output, number_of_sequenc
         with open(classifier_prefix + '.le', 'rb') as reader:
             classifier_le = pickle.loads(reader.read())
 
-        classifier_model  = build_model(output_shape=(len(classifier_le.classes_)))
+        classifier_model  = build_model(output_shape=(len(classifier_le.classes_)), embed_dim=max_vocab_size)
         classifier_model.load_weights(classifier_prefix + '.weights')
 
     number_of_generated_sequences = 0

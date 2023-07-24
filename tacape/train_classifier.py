@@ -19,6 +19,7 @@ def main():
     argument_parser.add_argument('--format', choices=['text', 'fasta'], default='text', help='[optional] Input file format (default: text)')
     argument_parser.add_argument('--output', required=True, help='Path prefix of the output files containing the trained model')
     argument_parser.add_argument('--epochs', type=int, default=30, help="[optional] Number of epochs to be used during training (default: 30)")
+    argument_parser.add_argument('--max-vocab-size', required=False, help='[optional] Size of the vocabulary', default=24, type=int)
 
     arguments = argument_parser.parse_args()
 
@@ -29,10 +30,11 @@ def main():
         arguments.negative_test, 
         format=arguments.format, 
         output=arguments.output,
-        epochs=arguments.epochs
+        epochs=arguments.epochs,
+        max_vocab_size=arguments.max_vocab_size
     )
 
-def train_model(positive_train, negative_train, positive_test, negative_test, output, format='text', epochs=30):
+def train_model(positive_train, negative_train, positive_test, negative_test, output, max_vocab_size, format='text', epochs=30):
 
     raw_X_train = [*load_data(positive_train, format), *load_data(negative_train, format)]
     raw_X_test  = [*load_data(positive_test, format), *load_data(negative_test, format)]
@@ -69,7 +71,7 @@ def train_model(positive_train, negative_train, positive_test, negative_test, ou
         start_from_epoch=0,
     )]
 
-    model = build_model(output_shape=(len(le.classes_)))
+    model = build_model(output_shape=(len(le.classes_)), vocab_size=max_vocab_size)
     model.fit(X_train, y_train_encode, validation_data=(X_test, y_test_encode), epochs=epochs, callbacks=callbacks)
     model.save_weights(output + '.weights')
 
